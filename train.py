@@ -109,8 +109,8 @@ class Trainer(object):
             tbar.set_description('Train loss: %.3f' % (train_loss / (i + 1)))
             self.writer.add_scalar('train/total_loss_iter', loss.item(), i + num_img_tr * epoch)
 
-            # Show 10 * 3 inference results each epoch
-            if i % (num_img_tr // 10) == 0:
+            # Show 5 * 3 inference results each epoch
+            if i % (num_img_tr // 5) == 0:
                 global_step = i + num_img_tr * epoch
                 self.summary.visualize_image(self.writer, self.args.dataset, image, target, output, global_step)
 
@@ -181,7 +181,7 @@ def main():
                         choices=['resnet', 'xception', 'drn', 'mobilenet'],
                         help='backbone name (default: resnet)')
     parser.add_argument('--out-stride', type=int, default=16,
-                        help='network output stride (default: 8)')
+                        help='network output stride (default: 16)')
     parser.add_argument('--dataset', type=str, default='pascal',
                         choices=['pascal', 'coco', 'cityscapes'],
                         help='dataset name (default: pascal)')

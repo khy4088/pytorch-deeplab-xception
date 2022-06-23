@@ -13,15 +13,14 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class COCOSegmentation(Dataset):
-    NUM_CLASSES = 21
-    CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4,
-        1, 64, 20, 63, 7, 72]
+    NUM_CLASSES = 17
+    CAT_LIST = [i+1 for i in range(16)]
 
     def __init__(self,
                  args,
                  base_dir=Path.db_root_dir('coco'),
                  split='train',
-                 year='2017'):
+                 year=''):
         super().__init__()
         ann_file = os.path.join(base_dir, 'annotations/instances_{}{}.json'.format(split, year))
         ids_file = os.path.join(base_dir, 'annotations/{}_ids_{}.pth'.format(split, year))
@@ -44,6 +43,9 @@ class COCOSegmentation(Dataset):
             return self.transform_tr(sample)
         elif self.split == 'val':
             return self.transform_val(sample)
+        elif self.split == 'test':
+            return self.transform_val(sample)
+            
 
     def _make_img_gt_point_pair(self, index):
         coco = self.coco
