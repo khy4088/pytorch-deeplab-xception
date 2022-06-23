@@ -19,6 +19,8 @@ class Tester(object):
     def __init__(self, args):
         if not os.path.isfile(args.model):
             raise RuntimeError("no checkpoint found at '{}'".fromat(args.model))
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        print(self.device)
         self.args = args
         self.color_map = get_pascal_labels()
         self.train_loader, self.val_loader, self.test_loader, self.train_ids, self.val_ids, self.test_ids, self.nclass = make_data_loader(args)
@@ -30,13 +32,10 @@ class Tester(object):
                         freeze_bn=False)
         self.idx = 0
         self.model = model
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        print(self.device)
-        self.testannFile = COCO('/content/dlv3_dataset/annotations/instances_test.json')
         checkpoint = torch.load(args.model, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         model = model.to(self.device)
-        print('loaded model')
+        print('loaded model from {}'.format(args.model))
 
         self.evaluator = Evaluator(self.nclass)
 
