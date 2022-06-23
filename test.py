@@ -3,6 +3,8 @@ import os
 import numpy as np 
 import tqdm
 import torch
+from pycocotools.coco import COCO
+
 
 
 from PIL import Image
@@ -11,24 +13,26 @@ from modeling.deeplab import *
 from dataloaders.utils import get_pascal_labels
 from utils.metrics import Evaluator
 
+
+
 class Tester(object):
     def __init__(self, args):
         if not os.path.isfile(args.model):
             raise RuntimeError("no checkpoint found at '{}'".fromat(args.model))
         self.args = args
         self.color_map = get_pascal_labels()
-        self.train_loader, self.val_loader, self.test_loader, self.nclass = make_data_loader(args)
-        self.id = 0
+        self.train_loader, self.val_loader, self.test_loader, self.train_ids, self.val_ids, self.test_ids, self.nclass = make_data_loader(args)
         #Define model
         model = DeepLab(num_classes=self.nclass,
                         backbone=args.backbone,
                         output_stride=args.out_stride,
                         sync_bn=False,
                         freeze_bn=False)
-        
+        self.idx = 0
         self.model = model
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         print(self.device)
+        self.testannFile = COCO('/content/dlv3_dataset/annotations/instances_test.json')
         checkpoint = torch.load(args.model, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         model = model.to(self.device)
@@ -36,11 +40,11 @@ class Tester(object):
 
         self.evaluator = Evaluator(self.nclass)
 
-    def save_image(self, array, op):
+    def save_image(self, imgId, array, op):
         text = 'gt'
         if op == 0:
             text = 'pred'
-        file_name = str(self.id)+'_'+text+'.png'
+        file_name = str(imgId)+'_'+text+'.png'
         r = array.copy()
         g = array.copy()
         b = array.copy()
@@ -69,14 +73,19 @@ class Tester(object):
             pred = output.data.cpu().numpy()
             target = target.cpu().numpy()
             pred = np.argmax(pred, axis=1)
-            self.id = i
-            self.save_image(pred[0], 0)
-            self.save_image(target[0], 1)
+            self.imgname = self.testannFile.imgs[self.test_ids[self.idx]]['file_name'].rstrip('.jpg')
+            self.save_image(self.imgname, pred[0], 0)
+            self.save_image(self.imgname, target[0], 1)
             self.evaluator.add_batch(target, pred)
+            self.idx += 1
     
         Acc = self.evaluator.Pixel_Accuracy()
         Acc_class = self.evaluator.Pixel_Accuracy_Class()
+        mIoU = self.evaluator.Mean_Intersection_over_Union()
+        FWIoU = self.evaluator.Frequency_Weighted_Intersection_over_Union()
         print('Acc:{}, Acc_class:{}'.format(Acc, Acc_class))
+        print('mIOU:{}, FWIoU:{}'.format(mIoU, FWIoU))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Pytorch DeeplabV3Plus Test your data')
