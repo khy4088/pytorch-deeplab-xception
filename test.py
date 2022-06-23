@@ -81,7 +81,11 @@ class Tester(object):
     
         Acc = self.evaluator.Pixel_Accuracy()
         Acc_class = self.evaluator.Pixel_Accuracy_Class()
+        mIoU = self.evaluator.Mean_Intersection_over_Union()
+        FWIoU = self.evaluator.Frequency_Weighted_Intersection_over_Union()
         print('Acc:{}, Acc_class:{}'.format(Acc, Acc_class))
+        print('mIOU:{}, FWIoU:{}'.format(mIoU, FWIoU))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Pytorch DeeplabV3Plus Test your data')
