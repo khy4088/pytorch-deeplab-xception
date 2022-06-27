@@ -100,11 +100,11 @@ def main():
                         help='output stride')
     parser.add_argument('--crop_size', type=int, default=1080,
                         help='image size')
-    parser.add_argument('--model', type=str, default='/content/pytorch-deeplab-xception/run/coco/deeplab-resnet/model_best.pth.tar',
+    parser.add_argument('--model', type=str, default=None,
                         help='load your model')
-    parser.add_argument('--save_path', type=str, default='/content/test',
+    parser.add_argument('--save_path', type=str, default=None,
                         help='save your prediction data')
-    parser.add_argument('--batch-size', type=int, default=4,
+    parser.add_argument('--batch-size', type=int, default=1,
                         help='batch size')
 
     args = parser.parse_args()
