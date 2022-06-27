@@ -36,6 +36,7 @@ class COCOSegmentation(Dataset):
         self.args = args
 
     def __getitem__(self, index):
+        _img, _target, _path = self._make_img_gt_point_pair(index)
         _img, _target, path = self._make_img_gt_point_pair(index)
         sample = {'image': _img, 'label': _target}
 
@@ -44,9 +45,8 @@ class COCOSegmentation(Dataset):
         elif self.split == 'val':
             return self.transform_val(sample)
         elif self.split == 'test':
-            _tr_img = self.transform_test(_img)
-            _tr_target = self.transform_test(_target)
-            sample = {'image': _tr_img, 'label': _tr_target, 'file_name': path}
+            sample = self.transform_test(sample)
+            sample['file_name'] = path
             return sample
             
 
@@ -115,7 +115,7 @@ class COCOSegmentation(Dataset):
             tr.FixScaleCrop(crop_size=self.args.crop_size),
             tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
             tr.ToTensor()])
-
+    
         return composed_transforms(sample)
 
     def transform_test(self, sample):
@@ -125,6 +125,15 @@ class COCOSegmentation(Dataset):
             tr.ToTensor()])
 
         return composed_transforms(sample)    
+
+
+    def transform_test(self, sample):
+
+        composed_transforms = transforms.Compose([
+            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            tr.ToTensor()])
+        sample = composed_transforms(sample)
+        return sample
 
 
     def __len__(self):

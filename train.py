@@ -27,7 +27,8 @@ class Trainer(object):
         
         # Define Dataloader
         kwargs = {'num_workers': args.workers, 'pin_memory': True}
-        self.train_loader, self.val_loader, self.test_loader, self.nclass = make_data_loader(args, **kwargs)
+        #self.train_loader, self.val_loader, self.test_loader, self.nclass = make_data_loader(args, **kwargs)
+        self.train_loader, self.val_loader, self.test_loader, self.train_ids, self.val_ids, self.test_ids, self.nclass = make_data_loader(args)
 
         # Define network
         model = DeepLab(num_classes=self.nclass,

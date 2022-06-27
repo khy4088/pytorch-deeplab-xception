@@ -19,24 +19,24 @@ class Tester(object):
     def __init__(self, args):
         if not os.path.isfile(args.model):
             raise RuntimeError("no checkpoint found at '{}'".fromat(args.model))
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        print(self.device)
         self.args = args
         self.color_map = get_pascal_labels()
         self.train_loader, self.val_loader, self.test_loader, self.train_ids, self.val_ids, self.test_ids, self.nclass = make_data_loader(args)
+        self.testannFile = COCO('/content/dlv3_dataset/annotations/instances_test.json')
+        self.test_ids = self.testannFile.getImgIds()
         #Define model
         model = DeepLab(num_classes=self.nclass,
                         backbone=args.backbone,
                         output_stride=args.out_stride,
                         sync_bn=False,
                         freeze_bn=False)
-        self.idx = 0
         self.model = model
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        print(self.device)
-        self.testannFile = COCO('/content/dlv3_dataset/annotations/instances_test.json')
         checkpoint = torch.load(args.model, map_location=self.device)
         self.model.load_state_dict(checkpoint['state_dict'])
         model = model.to(self.device)
-        print('loaded model')
+        print('loaded model from {}'.format(args.model))
 
         self.evaluator = Evaluator(self.nclass)
 
@@ -66,6 +66,9 @@ class Tester(object):
         # tbar = tqdm(self.test_loader, desc='\r')
         for i, sample in enumerate(self.test_loader):
             image, target = sample['image'], sample['label']
+            imgname = sample['file_name']
+            imgname = ''.join(imgname).rstrip('.jpg')
+            print(imgname, type(imgname))
             image = image.to(self.device)
             target = target.to(self.device)
             with torch.no_grad():
@@ -73,12 +76,9 @@ class Tester(object):
             pred = output.data.cpu().numpy()
             target = target.cpu().numpy()
             pred = np.argmax(pred, axis=1)
-            self.imgname = self.testannFile.imgs[self.test_ids[self.idx]]['file_name'].rstrip('.jpg')
-            self.save_image(self.imgname, pred[0], 0)
-            self.save_image(self.imgname, target[0], 1)
+            self.save_image(imgname, pred[0], 0)
+            self.save_image(imgname, target[0], 1)
             self.evaluator.add_batch(target, pred)
-            self.idx += 1
-    
         Acc = self.evaluator.Pixel_Accuracy()
         Acc_class = self.evaluator.Pixel_Accuracy_Class()
         mIoU = self.evaluator.Mean_Intersection_over_Union()
