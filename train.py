@@ -106,7 +106,7 @@ class Trainer(object):
             loss.backward()
             self.optimizer.step()
             train_loss += loss.item()
-            tbar.set_description('Train loss: %.3f' % (train_loss / (i + 1)))
+            tbar.set_description('Train loss: %.7f' % (train_loss / (i + 1)))
             self.writer.add_scalar('train/total_loss_iter', loss.item(), i + num_img_tr * epoch)
 
             # Show 5 * 3 inference results each epoch
@@ -115,8 +115,8 @@ class Trainer(object):
                 self.summary.visualize_image(self.writer, self.args.dataset, image, target, output, global_step)
 
         self.writer.add_scalar('train/total_loss_epoch', train_loss, epoch)
-        print('[Epoch: %d, numImages: %5d]' % (epoch, i * self.args.batch_size + image.data.shape[0]))
-        print('Loss: %.3f' % train_loss)
+        print('[Epoch: %d, numImages: %9d]' % (epoch, i * self.args.batch_size + image.data.shape[0]))
+        print('Loss: %.7f' % train_loss)
 
         if self.args.no_val:
             # save checkpoint every epoch
@@ -142,7 +142,7 @@ class Trainer(object):
                 output = self.model(image)
             loss = self.criterion(output, target)
             test_loss += loss.item()
-            tbar.set_description('Test loss: %.3f' % (test_loss / (i + 1)))
+            tbar.set_description('Test loss: %.7f' % (test_loss / (i + 1)))
             pred = output.data.cpu().numpy()
             target = target.cpu().numpy()
             pred = np.argmax(pred, axis=1)
