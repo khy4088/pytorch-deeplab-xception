@@ -90,7 +90,7 @@ class COCOSegmentation(Dataset):
             m = coco_mask.decode(rle)
             cat = instance['category_id']
             if cat in self.CAT_LIST:
-                c = self.CAT_LIST.index(cat)
+                c = self.CAT_LIST.index(cat) + 1
             else:
                 continue
             if len(m.shape) < 3:
